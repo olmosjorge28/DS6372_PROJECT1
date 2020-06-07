@@ -126,16 +126,53 @@ mean(model_data_filtered_material$material)
 model_data_filtered_material %>% group_by(material) %>%
   summarise(no_rows = length(material))
 
-model_data <- model_data %>% mutate(material = if_else(is.na(material), as.numeric(1), as.numeric(material)), material_imputed_ind= factor(if_else(is.na(material), "Imputed", "Real")))
+model_data <- model_data %>% mutate(material_imputed = if_else(is.na(material), as.numeric(1), as.numeric(material)), material_imputed_ind= factor(if_else(is.na(material), "Imputed", "Real")))
 
 
 
 
 
-write.csv(model_data,"/Users/jorgeolmos/Documents/SMU_DATA_SCIENCE/DS_6372/project_1/imputed_dataset.csv")
+
+## Correlation analysis with clean data
+
+clean_dataset <- read.csv("/Users/jorgeolmos/Documents/SMU_DATA_SCIENCE/DS_6372/project_1/clean_data_set.csv", header = TRUE)
 
 
 
+#Colinearity plot
+M <- cor(clean_dataset)
+corrplot(M, type="upper", order="hclust",
+         col=brewer.pal(n=8, name="RdYlBu"))
+M <- cor(clean_dataset[sapply(clean_dataset, is.numeric)])
+
+corrplot(M, type="upper", order="hclust",
+         col=brewer.pal(n=8, name="RdYlBu"))
+M[,"log_price_doc"] 
+M[,"price_doc"] 
+
+#Printing price_doc colinearity data
+price_doc_corr <- M[,"price_doc"]
+write.csv(price_doc_corr,"/Users/jorgeolmos/Documents/SMU_DATA_SCIENCE/DS_6372/project_1/correlationAnalysis2.csv")
+
+price_doc_corr <- M[,"log_price_doc"]
+write.csv(price_doc_corr,"/Users/jorgeolmos/Documents/SMU_DATA_SCIENCE/DS_6372/project_1/correlationAnalysis2Log.csv")
+
+
+filtered_model <- model_data %>% select(
+  price_doc,
+  life_sq,
+  num_room,
+  full_sq,
+  build_count_brick,
+  workplaces_km,
+  swim_pool_km,
+  university_km,
+  basketball_km,
+  office_km,
+  stadium_km) 
+
+ggpairs(filtered_model, title="correlogram with ggpairs()") 
+corrplot(cor(filtered_model), type="upper", order="hclust")
 
 
 
