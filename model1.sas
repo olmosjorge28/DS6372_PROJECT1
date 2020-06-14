@@ -235,6 +235,17 @@ run;
 
 
 
+data clean_model_data;
+   set clean_model_data;
+   over_price_doc = 1/price_doc;
+run;
+
+data clean_model_data;
+   set clean_model_data;
+   price_doc_sqr = price_doc*price_doc;
+run;
+
+
 proc contents data=clean_model_data;
 run;
 
@@ -275,65 +286,19 @@ RUN;
 *%let depVar = quality;  *** dependent (response) variable for models;
 
 
-data inDat; set &inputDataset;  randNumber = ranuni(11); if _n_ < &numObs; run;
-data train; set inDat; if randNumber <= 1/4 then delete; run;
-data test; set inDat; if randNumber > 1/4 then delete; run;
+data inDat; set &inputDataset;  randNumber = ranuni(101912); if _n_ < &numObs; run;
+*data test; set inDat; if randNumber <= 1/4 then delete; run;
+*data train; set inDat; if randNumber > 1/4 then delete; run;
+
+data test; set inDat; if randNumber <= 1/10 then delete; run;
+data train; set inDat; if randNumber > 1/10 then delete; run;
 
 
 *lasso;
 proc glmselect data=train testdata=test plots(stepAxis=number)=(criterionPanel ASEPlot CRITERIONPANEL);
 class product_type; 
-model log_price_doc= 
-kremlin_km
-basketball_km
-stadium_km
-metro_min_avto
-university_km
-swim_pool_km
-workplaces_km
-big_church_km
-office_km
-metro_km_avto
-park_km
-fitness_km
-public_healthcare_km
-shopping_centers_km
-bus_terminal_avto_km
-market_shop_km
-ice_rink_km
-school_km
-public_transport_station_km
-public_transport_station_min_wa
-big_road2_km
-railroad_station_avto_min
-railroad_station_avto_km
-office_raion
-children_preschool
-X0_6_all
-university_top_20_raion
-X0_13_all
-X0_17_all
-children_school
-X7_14_all
-shopping_centers_raion
-raion_popul
-timestamp
-healthcare_centers_raion
-kitch_sq_imputed
-num_room_imputed
-full_sq
-life_sq_imputed
-product_type
-/ 
-selection=LASSO( choose=CV stop=CV ) CVdetails; 
-           score data=test out=scoredLASSO;
-run;  
-
-
-
-*stepwise;
-proc glmselect data=train testdata=test plots(stepAxis=number)=(criterionPanel ASEPlot CRITERIONPANEL);
-class product_type; 
+class railroad_terminal_raion;
+*class hospital_beds_raion;
 model price_doc= 
 kremlin_km
 basketball_km
@@ -375,6 +340,171 @@ num_room_imputed
 full_sq
 life_sq_imputed
 product_type
+build_year_imputed
+railroad_terminal_raion
 / 
-selection = backward(select=sl choose=press) details=steps select=SL slstay=0.01 slentry=0.01 cvDetails = all ;
+selection=LASSO( choose=adjrsq stop=adjrsq ) CVdetails; 
+           score data=test out=scoredLASSO;
 run;  
+
+
+*selection=LASSO( choose=CV stop=CV ) CVdetails; *score data=test out=scoredLASSO;
+
+
+
+*backword on 0.5185
+*stepwise 0.5438
+*stepwise;
+proc glmselect data=train testdata=test plots(stepAxis=number)=(criterionPanel ASEPlot CRITERIONPANEL);
+class product_type; 
+class railroad_terminal_raion;
+class hospital_beds_raion;
+model price_doc_sqr= 
+kremlin_km
+basketball_km
+stadium_km
+metro_min_avto
+university_km
+swim_pool_km
+workplaces_km
+big_church_km
+office_km
+metro_km_avto
+park_km
+fitness_km
+public_healthcare_km
+shopping_centers_km
+bus_terminal_avto_km
+market_shop_km
+ice_rink_km
+school_km
+public_transport_station_km
+public_transport_station_min_wa
+big_road2_km
+railroad_station_avto_min
+railroad_station_avto_km
+office_raion
+children_preschool
+X0_6_all
+university_top_20_raion
+X0_13_all
+X0_17_all
+children_school
+X7_14_all
+shopping_centers_raion
+raion_popul
+timestamp
+healthcare_centers_raion
+kitch_sq_imputed
+num_room_imputed
+full_sq
+life_sq_imputed
+product_type
+build_year_imputed
+railroad_terminal_raion
+hospital_beds_raion
+/ 
+selection = stepwise(select=sl choose=adjrsq stop=adjrsq) details=steps select=SL slstay=0.05 slentry=0.05 cvDetails = all ;
+run;  
+*selection = backword(select=sl choose=press) details=steps select=SL slstay=0.01 slentry=0.01 cvDetails = all ;
+
+
+/**/
+/*kremlin_km       	1 -150800 */
+/*basketball_km    	1 54494 */
+/*university_km    	1 -21826 */
+/*office_km        	1 -89215 */
+/*fitness_km       	1 -79896 */
+/*public_healthcare_km 1 -94264 */
+/*bus_terminal_avto_km 1 11931 */
+/*ice_rink_km 1 109959 */
+/*public_transport_sta 1 1688.674197 */
+/*big_road2_km 1 -20379 */
+/*railroad_station_avt 1 -850.356175 */
+/*raion_popul 1 2.361892 */
+/*timestamp 1 1094.651801 */
+/*healthcare_centers_r 1 170356 */
+/*full_sq 1 149100 */
+/*product_type_Investment 1 752353 */
+/*build_year_imputed 1 3141.382929 */
+/*railroad_terminal_raion_0 1 642732 */
+
+
+PROC SGSCATTER DATA=clean_model_data;
+  MATRIX 
+  price_doc
+  kremlin_km       
+  basketball_km    	
+  university_km    	
+  office_km        
+  fitness_km;       
+RUN;
+
+
+
+
+  
+PROC SGSCATTER DATA=clean_model_data;
+  MATRIX 
+  price_doc
+public_healthcare_km 
+  bus_terminal_avto_km
+  ice_rink_km
+  big_road2_km
+  build_year_imputed
+  full_sq;      
+RUN;
+
+
+
+
+proc glm data=clean_model_data PLOTS=(DIAGNOSTICS RESIDUALS) ;
+class railroad_terminal_raion;
+class product_type;
+model price_doc = 
+  kremlin_km       
+  basketball_km    	
+  university_km    	
+  office_km        
+  fitness_km
+  public_healthcare_km 
+  bus_terminal_avto_km
+  ice_rink_km
+  big_road2_km
+  build_year_imputed
+  full_sq
+  timestamp
+  build_year_imputed
+  railroad_terminal_raion
+  product_type;
+  output out=RegOut pred=Pred rstudent=RStudent dffits=DFFits cookd=CooksD;
+run;
+
+proc reg data=clean_model_data plots(only) = (CooksD(label) DFFits(label));   
+model price_doc =  
+kremlin_km       	
+basketball_km    	
+university_km    	
+office_km        	
+fitness_km       	
+public_healthcare_km 
+bus_terminal_avto_km
+ice_rink_km               
+big_road2_km              
+raion_popul            
+timestamp              
+healthcare_centers_raion 
+full_sq                  
+build_year_imputed 
+railroad_station_avto_km
+public_transport_station_km;
+output out=RegOut pred=Pred rstudent=RStudent dffits=DFFits cookd=CooksD; /* optional: output statistics */ run; quit;
+
+*railroad_terminal_raion transform to numeric
+*product_type to numeric;
+
+
+
+proc print data = DIAGNOSTICS;
+run;
+

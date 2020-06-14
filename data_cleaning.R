@@ -12,7 +12,7 @@ library(corrplot)
 library(RColorBrewer)
 
 
-model_data <- read.csv("/Users/jorgeolmos/Documents/SMU_DATA_SCIENCE/DS_6372/project_1/modelingData.csv", header = TRUE)
+# model_data <- read.csv("/Users/jorgeolmos/Documents/SMU_DATA_SCIENCE/DS_6372/project_1/modelingData.csv", header = TRUE)
 
 
 summary(model_data)
